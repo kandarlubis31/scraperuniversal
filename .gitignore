@@ -1,0 +1,22 @@
+
+# --- backup envelope (auto) ---
+.env
+.env.*
+!.env.example
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.dart_tool/
+build/
+dist/
+.next/
+.expo/
+output/
+*.log
+.DS_Store
+Thumbs.db
+nul
+

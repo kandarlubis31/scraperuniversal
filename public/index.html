@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebScraper Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:         #080C10;
+            --surface:    #0E1520;
+            --surface2:   #141D2B;
+            --border:     #1E2D42;
+            --border-hi:  #2A4060;
+            --accent:     #00C896;
+            --accent-dim: rgba(0,200,150,0.12);
+            --accent2:    #0098FF;
+            --warn:       #FF6B35;
+            --text:       #D6E4F5;
+            --text-dim:   #6B8BAD;
+            --text-muted: #3A5070;
+            --radius:     10px;
+            --mono:       'JetBrains Mono', monospace;
+            --sans:       'Syne', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 16px 80px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 0;
+        }
+
+        .wrapper { position: relative; z-index: 1; width: 100%; max-width: 860px; }
+
+        header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 40px;
+        }
+        .logo {
+            width: 38px; height: 38px;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            display: grid; place-items: center;
+            font-size: 18px;
+        }
+        .brand { display: flex; flex-direction: column; }
+        .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+        .brand-sub  { font-size: 11px; font-family: var(--mono); color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+        .status-dot {
+            margin-left: auto;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; font-family: var(--mono); color: var(--text-dim);
+        }
+        .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+        .dot.ready { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+        .dot.error { background: var(--warn); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        .input-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .url-row { display: flex; gap: 10px; }
+        .url-wrap {
+            flex: 1; display: flex; align-items: center;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0 14px; gap: 8px;
+            transition: border-color .2s;
+        }
+        .url-wrap:focus-within { border-color: var(--accent); }
+        .url-wrap span { font-family: var(--mono); font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+        input[type="url"] {
+            flex: 1; background: none; border: none; outline: none;
+            color: var(--text); font-family: var(--mono); font-size: 13px;
+            padding: 13px 0;
+        }
+        input[type="url"]::placeholder { color: var(--text-muted); }
+
+        .btn {
+            padding: 0 22px; border: none; border-radius: 8px;
+            font-family: var(--sans); font-weight: 700; font-size: 14px;
+            cursor: pointer; transition: all .2s; white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--accent); color: #000;
+            height: 46px;
+        }
+        .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+        .btn-primary:disabled { background: var(--surface2); color: var(--text-muted); cursor: not-allowed; }
+        .btn-sm {
+            background: var(--surface2); color: var(--text-dim);
+            border: 1px solid var(--border); padding: 6px 12px;
+            font-size: 11px; border-radius: 6px; font-family: var(--mono);
+        }
+        .btn-sm:hover { border-color: var(--border-hi); color: var(--text); }
+
+        .options-row {
+            display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+        }
+        .opt-chip {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 20px; padding: 5px 12px;
+            font-size: 12px; color: var(--text-dim);
+            cursor: pointer; transition: all .15s;
+            user-select: none;
+        }
+        .opt-chip input { display: none; }
+        .opt-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .opt-chip:hover { border-color: var(--border-hi); color: var(--text); }
+
+        .progress-wrap { margin-bottom: 16px; display: none; }
+        .progress-label {
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .progress-bar-bg {
+            height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%; background: var(--accent);
+            border-radius: 2px; transition: width .4s ease;
+        }
+        .progress-log {
+            font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+            margin-top: 6px; min-height: 16px;
+        }
+
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            margin-bottom: 16px; display: none;
+        }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 14px;
+        }
+        .stat-num { font-size: 22px; font-weight: 800; color: #fff; }
+        .stat-label { font-size: 10px; font-family: var(--mono); color: var(--text-muted); letter-spacing: .5px; margin-top: 2px; }
+
+        .tabs-wrap { display: none; }
+        .tabs {
+            display: flex; gap: 2px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-bottom: none; border-radius: var(--radius) var(--radius) 0 0;
+            padding: 6px 6px 0;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 8px 16px; border-radius: 6px 6px 0 0;
+            font-size: 12px; font-family: var(--mono); cursor: pointer;
+            color: var(--text-dim); border: 1px solid transparent;
+            border-bottom: none; white-space: nowrap; transition: all .15s;
+        }
+        .tab.active {
+            background: var(--bg); color: var(--accent);
+            border-color: var(--border);
+        }
+        .tab:not(.active):hover { color: var(--text); }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        .result-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 0;
+        }
+        .result-toolbar {
+            display: flex; justify-content: flex-end; gap: 6px;
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+        }
+        pre {
+            padding: 16px 18px; overflow-x: auto;
+            white-space: pre-wrap; word-break: break-all;
+            font-family: var(--mono); font-size: 12px; line-height: 1.7;
+            color: #8BBFDF; max-height: 480px; overflow-y: auto;
+        }
+        pre .k { color: #9ECBFF; }
+        pre .s { color: #9DEBA8; }
+        pre .n { color: #FFD599; }
+        pre .b { color: var(--warn); }
+
+        .preview-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            padding: 16px 18px;
+        }
+        .preview-section {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 14px;
+        }
+        .preview-section h4 {
+            font-size: 10px; font-family: var(--mono); color: var(--text-muted);
+            letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;
+        }
+        .meta-row { display: flex; flex-direction: column; gap: 6px; }
+        .meta-item label { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
+        .meta-item p { font-size: 13px; color: var(--text); margin-top: 1px; word-break: break-word; }
+        .tag { display: inline-block; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,200,150,.2); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-family: var(--mono); margin: 2px 2px 0 0; }
+        .link-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+        .link-item { font-size: 11px; font-family: var(--mono); color: var(--accent2); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .link-item:hover { text-decoration: underline; }
+
+        .empty-state {
+            padding: 60px 20px; text-align: center;
+            font-family: var(--mono); color: var(--text-muted); font-size: 13px;
+        }
+        .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+        .error-banner {
+            background: rgba(255,107,53,.08); border: 1px solid rgba(255,107,53,.3);
+            border-radius: var(--radius); padding: 14px 18px;
+            font-family: var(--mono); font-size: 12px; color: var(--warn);
+            margin-bottom: 16px; display: none;
+        }
+        .error-banner.show { display: block; }
+
+        .queue-badge {
+            font-family: var(--mono); font-size: 10px; color: var(--text-muted);
+            padding: 4px 10px; background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 20px; margin-left: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .preview-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .url-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <header>
+        <div class="logo">🔎</div>
+        <div class="brand">
+            <span class="brand-name">WebScraper<span style="color:var(--accent)">Pro</span></span>
+            <span class="brand-sub">Universal JSON Extractor</span>
+        </div>
+        <div class="status-dot">
+            <div class="dot" id="statusDot"></div>
+            <span id="statusText">Checking...</span>
+        </div>
+    </header>
+
+    <div class="input-card">
+        <div class="url-row">
+            <div class="url-wrap">
+                <span>url://</span>
+                <input type="url" id="urlInput" placeholder="masukkan URL target..." autocomplete="off" onkeydown="if(event.key==='Enter')startScrape()">
+            </div>
+            <button class="btn btn-primary" id="scrapeBtn" onclick="startScrape()">Scrape →</button>
+        </div>
+        <div class="options-row" id="optionsRow">
+            <label class="opt-chip active" id="opt-meta"><input type="checkbox" checked> ◆ Meta</label>
+            <label class="opt-chip active" id="opt-content"><input type="checkbox" checked> ◆ Content</label>
+            <label class="opt-chip active" id="opt-links"><input type="checkbox" checked> ◆ Links</label>
+            <label class="opt-chip active" id="opt-images"><input type="checkbox" checked> ◆ Images</label>
+            <label class="opt-chip active" id="opt-tables"><input type="checkbox" checked> ◆ Tables</label>
+            <label class="opt-chip active" id="opt-structured"><input type="checkbox" checked> ◆ JSON-LD</label>
+        </div>
+    </div>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label">
+            <span id="progressLabel">Menghubungi server...</span>
+            <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+        <div class="progress-log" id="progressLog"></div>
+    </div>
+
+    <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-num" id="s-headings">-</div><div class="stat-label">Headings</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-paragraphs">-</div><div class="stat-label">Paragraphs</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-links">-</div><div class="stat-label">Links</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-images">-</div><div class="stat-label">Images</div></div>
+    </div>
+
+    <div class="tabs-wrap" id="tabsWrap">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('preview')">👁 Preview</div>
+            <div class="tab" onclick="switchTab('json')">{ } JSON</div>
+            <div class="tab" onclick="switchTab('links')">🔗 Links</div>
+        </div>
+        <div class="result-box">
+            <div class="tab-pane active" id="tab-preview">
+                <div class="preview-grid" id="previewGrid"></div>
+            </div>
+            <div class="tab-pane" id="tab-json">
+                <div class="result-toolbar">
+                    <button class="btn btn-sm" onclick="copyJSON()">Copy JSON</button>
+                    <button class="btn btn-sm" onclick="downloadJSON()">↓ Download</button>
+                </div>
+                <pre id="jsonOutput"><div class="empty-state"><div class="icon">◌</div>Belum ada data</div></pre>
+            </div>
+            <div class="tab-pane" id="tab-links">
+                <div class="result-toolbar">
+                    <button class="btn btn-sm" onclick="downloadLinks()">↓ Export CSV</button>
+                </div>
+                <div style="padding:14px 18px;" id="linksView"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentData = null
+    let activeTab = 'preview'
+    const STEPS = [
+        [10, 'Menginisialisasi browser...'],
+        [25, 'Membuka halaman target...'],
+        [50, 'Memuat konten halaman...'],
+        [70, 'Melakukan scroll otomatis...'],
+        [85, 'Mengekstrak data...'],
+        [95, 'Memproses hasil...'],
+    ]
+    let progressTimer = null
+
+    async function pollStatus() {
+        try {
+            const r = await fetch('/api/status')
+            const d = await r.json()
+            const dot = document.getElementById('statusDot')
+            const txt = document.getElementById('statusText')
+            if (d.browserStatus === 'ready') {
+                dot.className = 'dot ready'
+                txt.textContent = 'Ready'
+            } else if (d.browserStatus === 'initializing' || d.browserStatus === 'restarting') {
+                dot.className = 'dot'
+                txt.textContent = d.browserStatus + '...'
+            } else {
+                dot.className = 'dot error'
+                txt.textContent = 'Error'
+            }
+        } catch {}
+    }
+    pollStatus()
+    setInterval(pollStatus, 5000)
+
+    document.querySelectorAll('.opt-chip').forEach(chip => {
+        chip.addEventListener('click', () => chip.classList.toggle('active'))
+    })
+
+    function startProgress() {
+        let step = 0
+        document.getElementById('progressWrap').style.display = 'block'
+        progressTimer = setInterval(() => {
+            if (step >= STEPS.length) return
+            const [pct, label] = STEPS[step++]
+            document.getElementById('progressFill').style.width = pct + '%'
+            document.getElementById('progressPct').textContent = pct + '%'
+            document.getElementById('progressLabel').textContent = label
+            document.getElementById('progressLog').textContent = '→ ' + label
+        }, 1800)
+    }
+
+    function stopProgress(success) {
+        clearInterval(progressTimer)
+        document.getElementById('progressFill').style.width = success ? '100%' : '0%'
+        document.getElementById('progressPct').textContent = success ? '100%' : '—'
+        document.getElementById('progressLabel').textContent = success ? 'Selesai!' : 'Gagal'
+        setTimeout(() => {
+            document.getElementById('progressWrap').style.display = 'none'
+        }, 1200)
+    }
+
+    async function startScrape() {
+        const url = document.getElementById('urlInput').value.trim()
+        const btn = document.getElementById('scrapeBtn')
+        const errorBanner = document.getElementById('errorBanner')
+
+        errorBanner.className = 'error-banner'
+        if (!url) { showError('URL tidak boleh kosong'); return }
+        if (!url.startsWith('http')) { showError('URL harus diawali dengan http:// atau https://'); return }
+
+        btn.disabled = true
+        btn.textContent = 'Loading...'
+        document.getElementById('tabsWrap').style.display = 'none'
+        document.getElementById('statsRow').style.display = 'none'
+        startProgress()
+
+        try {
+            const res = await fetch('/api/scrape?url=' + encodeURIComponent(url))
+            const data = await res.json()
+
+            if (!res.ok) {
+                stopProgress(false)
+                showError(data.error || 'Scraping gagal')
+                return
+            }
+
+            currentData = data
+            stopProgress(true)
+            renderResults(data)
+        } catch (err) {
+            stopProgress(false)
+            showError('Network error: ' + err.message)
+        } finally {
+            btn.disabled = false
+            btn.textContent = 'Scrape →'
+        }
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorBanner')
+        el.textContent = '⚠ ' + msg
+        el.className = 'error-banner show'
+    }
+
+    function renderResults(data) {
+        document.getElementById('tabsWrap').style.display = 'block'
+
+        const stats = document.getElementById('statsRow')
+        stats.style.display = 'grid'
+        document.getElementById('s-headings').textContent = data.content?.headings?.length ?? 0
+        document.getElementById('s-paragraphs').textContent = data.content?.paragraphs?.length ?? 0
+        document.getElementById('s-links').textContent = data.links?.length ?? 0
+        document.getElementById('s-images').textContent = data.content?.images?.length ?? 0
+
+        document.getElementById('jsonOutput').innerHTML = syntaxHighlight(JSON.stringify(filterByOptions(data), null, 2))
+
+        renderLinks(data.links || [])
+
+        renderPreview(data)
+    }
+
+    function filterByOptions(data) {
+        const out = { url: data.url, canonical: data.canonical, statusCode: data.statusCode, scrapedAt: data.scrapedAt }
+        if (document.getElementById('opt-meta').classList.contains('active')) out.meta = data.meta
+        if (document.getElementById('opt-content').classList.contains('active')) {
+            out.content = {
+                headings: data.content?.headings,
+                paragraphs: data.content?.paragraphs,
+                ...(document.getElementById('opt-images').classList.contains('active') ? { images: data.content?.images } : {}),
+                ...(document.getElementById('opt-tables').classList.contains('active') ? { tables: data.content?.tables } : {}),
+            }
+        }
+        if (document.getElementById('opt-links').classList.contains('active')) out.links = data.links
+        if (document.getElementById('opt-structured').classList.contains('active')) out.structuredData = data.structuredData
+        return out
+    }
+
+    function renderPreview(data) {
+        const grid = document.getElementById('previewGrid')
+        const m = data.meta || {}
+        grid.innerHTML = `
+            <div class="preview-section" style="grid-column:1/-1">
+                <h4>Page Info</h4>
+                <div class="meta-row">
+                    <div class="meta-item"><label>Title</label><p>${esc(m.title || '—')}</p></div>
+                    <div class="meta-item"><label>Description</label><p>${esc(m.description?.slice(0,200) || '—')}</p></div>
+                    <div class="meta-item"><label>URL → Canonical</label><p style="font-family:var(--mono);font-size:11px;color:var(--accent2)">${esc(data.canonical || data.url)}</p></div>
+                    <div class="meta-item" style="display:flex;gap:12px;flex-wrap:wrap">
+                        ${badge('Status', data.statusCode)}
+                        ${badge('Lang', m.lang || '?')}
+                        ${badge('Links', data.links?.length)}
+                        ${badge('Images', data.content?.images?.length)}
+                        ${badge('JSON-LD', data.structuredData?.length)}
+                    </div>
+                </div>
+            </div>
+            <div class="preview-section">
+                <h4>Headings</h4>
+                ${(data.content?.headings || []).slice(0,10).map(h => `<div style="margin:4px 0"><span class="tag">${h.tag}</span> <span style="font-size:12px">${esc(h.text.slice(0,80))}</span></div>`).join('') || '<div style="color:var(--text-muted);font-size:12px">—</div>'}
+            </div>
+            <div class="preview-section">
+                <h4>Meta Details</h4>
+                ${Object.entries(m).filter(([k,v])=>v).map(([k,v])=>`<div class="meta-item"><label>${k}</label><p style="font-size:11px">${esc(String(v).slice(0,120))}</p></div>`).join('')}
+            </div>
+        `
+    }
+
+    function badge(label, val) {
+        return `<div class="meta-item"><label>${label}</label><p><span class="tag">${val ?? '—'}</span></p></div>`
+    }
+
+    function renderLinks(links) {
+        const el = document.getElementById('linksView')
+        if (!links.length) { el.innerHTML = '<div class="empty-state"><div class="icon">◌</div>Tidak ada link ditemukan</div>'; return }
+        el.innerHTML = `
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:10px">${links.length} link ditemukan</div>
+            <div class="link-list">
+                ${links.map(l=>`<a class="link-item" href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.text || l.href)}</a>`).join('')}
+            </div>
+        `
+    }
+
+    function switchTab(name) {
+        activeTab = name
+        document.querySelectorAll('.tab').forEach((t,i)=>{
+            const names = ['preview','json','links']
+            t.classList.toggle('active', names[i] === name)
+        })
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'))
+        document.getElementById('tab-' + name).classList.add('active')
+    }
+
+    function syntaxHighlight(json) {
+        return json
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, function (match) {
+                let cls = 'n';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'k';
+                    } else {
+                        cls = 's';
+                    }
+                } else if (/true|false|null/.test(match)) {
+                    cls = 'b';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+    }
+
+    function esc(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    function copyJSON() {
+        if (!currentData) return
+        navigator.clipboard.writeText(JSON.stringify(filterByOptions(currentData), null, 2)).then(() => {
+            const btn = event.target
+            btn.textContent = '✓ Copied!'
+            setTimeout(() => btn.textContent = 'Copy JSON', 2000)
+        })
+    }
+
+    function downloadJSON() {
+        if (!currentData) return
+        const blob = new Blob([JSON.stringify(filterByOptions(currentData), null, 2)], {type:'application/json'})
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = 'scrape-result-' + Date.now() + '.json'
+        a.click()
+    }
+
+    function downloadLinks() {
+        if (!currentData?.links?.length) return
+        const csv = 'text,href,rel\n' + currentData.links.map(l =>
+            `"${(l.text||'').replace(/"/g,'""')}","${l.href}","${l.rel||''}"`
+        ).join('\n')
+        const blob = new Blob([csv], {type:'text/csv'})
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = 'links-' + Date.now() + '.csv'
+        a.click()
+    }
+</script>
+</body>
+</html>
