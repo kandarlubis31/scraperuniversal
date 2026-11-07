@@ -63,6 +63,14 @@ the resolved IP.
 Scrape responsibly: this tool exists for pages you are allowed to read. Respect the target
 site's terms of service and robots policy.
 
+---
+
+## Bahasa Indonesia
+
+**scraperUniversal** adalah layanan HTTP self-hosted kecil yang merender halaman di Chrome headless lalu mengembalikan data terstruktur, sehingga situs yang hanya dirender di sisi klien tetap bisa diambil datanya.
+
+---
+
 ## License
 
 MIT
