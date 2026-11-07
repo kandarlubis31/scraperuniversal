@@ -13,7 +13,7 @@ control panel in `public/` lets you submit a URL and inspect the result.
 - **Job controls** — concurrency, request timeout, retry attempts and retry delay are all configurable
 - **Rate limiting** — 20 requests per minute per window by default
 - **SSRF protection** — requests to loopback, private ranges (`10/8`, `172.16/12`, `192.168/16`),
- link-local, `.local` and `file://` URLs are rejected before a browser is launched
+  link-local, `.local` and `file://` URLs are rejected before a browser is launched
 - **Auto-scroll** — scrolls up to a configurable pixel depth to trigger lazy-loaded content
 - **Web UI** — served from `public/`
 
